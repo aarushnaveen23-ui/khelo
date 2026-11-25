@@ -1,4 +1,5 @@
 import { Chess } from "chess.js";
+import { supabase, hasSupabaseConfig } from "./supabase-client.js";
 import { chooseMove, evaluatePosition } from "./chess-ai.js";
 import "./style.css";
 
@@ -25,6 +26,8 @@ const LESSONS = [
 ];
 
 let profile = null;
+let signedInUser = null;
+let suggestedMove = null;
 let game = null;
 let selectedSquare = null;
 let legalTargets = [];
@@ -36,8 +39,150 @@ let lessonIndex = 0;
 let playerNotes = [];
 let settings = { engineMode: "builtin", enginePath: "", adaptive: true, hints: true };
 
-function profileKey(name) { return "khelo-profile-" + name.toLowerCase().replace(/[^a-z0-9_-]/g, "_"); }
-function saveProfile() { if (profile) localStorage.setItem(profileKey(profile.name), JSON.stringify(profile)); }
+function accountPrefix() { return signedInUser?.id ? signedInUser.id + "-" : "local-"; }
+function profileKey(name) { return "khelo-profile-" + accountPrefix() + name.toLowerCase().replace(/[^a-z0-9_-]/g, "_"); }
+function lastPlayerKey() { return "khelo-last-player-" + accountPrefix(); }
+function saveProfile() { if (profile) { localStorage.setItem(profileKey(profile.name), JSON.stringify(profile)); localStorage.setItem(lastPlayerKey(), profile.name); } }
+
+function setAuthMessage(message, kind = "info") {
+  const node = $("authMessage");
+  node.textContent = message;
+  node.dataset.kind = kind;
+}
+function openPlayerSpace(user) {
+  signedInUser = user;
+  const email = user?.email || "";
+  const defaultName = email.includes("@") ? email.split("@")[0].slice(0, 20) : "Player";
+  $("playerName").value = defaultName || "Player";
+  let saved = null;
+  try {
+    const lastName = localStorage.getItem(lastPlayerKey());
+    if (lastName) saved = JSON.parse(localStorage.getItem(profileKey(lastName)) || "null");
+  } catch { saved = null; }
+  if (saved) {
+    profile = saved;
+    showScreen("gameScreen");
+    updateProfileUI();
+    startMatch();
+  } else {
+    showScreen("setupScreen");
+  }
+}
+function showSignedOutScreen() {
+  signedInUser = null;
+  profile = null;
+  $("userChip").hidden = true;
+  $("otpVerifyForm").hidden = true;
+  $("emailLoginForm").hidden = false;
+  $("authTitle").textContent = "Sign in to continue";
+  $("authSubtitle").textContent = "Enter your email and we'll send you a one-time verification code.";
+  $("otpCode").value = "";
+  showScreen("authScreen");
+}
+async function initializeEmailLogin() {
+  if (!hasSupabaseConfig || !supabase) {
+    $("authConfigNote").hidden = false;
+    $("emailLoginForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      setAuthMessage("Email login is not configured yet. Follow SUPABASE_SETUP.md, add your Supabase URL and public anon/publishable key to .env, then rebuild KHELO.", "error");
+    });
+    return;
+  }
+
+  $("authConfigNote").hidden = true;
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    if (data.session?.user) openPlayerSpace(data.session.user);
+  } catch (error) {
+    setAuthMessage("Could not restore your sign-in session: " + error.message, "error");
+  }
+
+  supabase.auth.onAuthStateChange((event) => {
+    if (event === "SIGNED_OUT") showSignedOutScreen();
+  });
+
+  $("emailLoginForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const email = $("authEmail").value.trim().toLowerCase();
+    if (!email) return;
+    $("sendOtpBtn").disabled = true;
+    setAuthMessage("Sending a verification code to " + email + "…");
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser: true }
+      });
+      if (error) throw error;
+      $("emailLoginForm").hidden = true;
+      $("otpVerifyForm").hidden = false;
+      $("authTitle").textContent = "Check your inbox";
+      $("authSubtitle").textContent = "Enter the six-digit one-time code sent to " + email + ".";
+      $("otpCode").focus();
+      setAuthMessage("Code requested. Check your inbox and spam folder. For security, the code is never shown inside KHELO.", "success");
+      $("resendOtpBtn").disabled = true;
+      setTimeout(() => { $("resendOtpBtn").disabled = false; }, 60000);
+    } catch (error) {
+      setAuthMessage("Could not send the code: " + error.message, "error");
+    } finally {
+      $("sendOtpBtn").disabled = false;
+    }
+  });
+
+  $("otpVerifyForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const email = $("authEmail").value.trim().toLowerCase();
+    const token = $("otpCode").value.trim();
+    if (!/^\d{6}$/.test(token)) {
+      setAuthMessage("Enter the six digits from your email.", "error");
+      return;
+    }
+    $("verifyOtpBtn").disabled = true;
+    setAuthMessage("Verifying your email code…");
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: "email"
+      });
+      if (error) throw error;
+      if (!data.user) throw new Error("The provider did not return a signed-in user.");
+      setAuthMessage("Email verified. Opening your chess space…", "success");
+      openPlayerSpace(data.user);
+    } catch (error) {
+      setAuthMessage("Code verification failed: " + error.message + ". Check the code and try again.", "error");
+    } finally {
+      $("verifyOtpBtn").disabled = false;
+    }
+  });
+
+  $("changeEmailBtn").addEventListener("click", () => {
+    $("otpVerifyForm").hidden = true;
+    $("emailLoginForm").hidden = false;
+    $("otpCode").value = "";
+    $("authTitle").textContent = "Sign in to continue";
+    $("authSubtitle").textContent = "Check the email address, then request a new one-time code.";
+    setAuthMessage("Enter the email address you want to verify.");
+  });
+
+  $("resendOtpBtn").addEventListener("click", async () => {
+    const email = $("authEmail").value.trim().toLowerCase();
+    $("resendOtpBtn").disabled = true;
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser: true }
+      });
+      if (error) throw error;
+      setAuthMessage("A new code has been requested. Check your inbox.", "success");
+    } catch (error) {
+      setAuthMessage("Could not resend the code: " + error.message, "error");
+      $("resendOtpBtn").disabled = false;
+    }
+    setTimeout(() => { $("resendOtpBtn").disabled = false; }, 60000);
+  });
+}
+
 function levelIndex(rating) {
   if (rating < 650) return 0;
   if (rating < 850) return 1;
@@ -92,6 +237,7 @@ function startMatch() {
   game = new Chess();
   selectedSquare = null;
   legalTargets = [];
+  suggestedMove = null;
   lastMove = null;
   flipped = false;
   thinking = false;
@@ -129,6 +275,8 @@ function renderBoard() {
     button.className = "square " + ((row + col) % 2 === 0 ? "light" : "dark");
     button.setAttribute("aria-label", squareName + (piece ? " " + piece.color + " " + piece.type : " empty"));
     if (selectedSquare === squareName) button.classList.add("selected");
+    if (suggestedMove?.from === squareName) button.classList.add("suggested-from");
+    if (suggestedMove?.to === squareName) button.classList.add("suggested-to");
     if (lastMove && (lastMove.from === squareName || lastMove.to === squareName)) button.classList.add("last");
     const target = legalTargets.find((move) => move.to === squareName);
     if (target) button.classList.add(piece ? "capture" : "legal");
@@ -192,6 +340,7 @@ function playHumanMove(from, to) {
   }
   selectedSquare = null;
   legalTargets = [];
+  suggestedMove = null;
   lastMove = { from, to };
   renderBoard();
   renderHistory();
@@ -245,12 +394,18 @@ async function playBotMove() {
   thinking = false;
   selectedSquare = null;
   legalTargets = [];
+  const coachMove = !game.isGameOver() && game.turn() === "w"
+    ? chooseMove(game, { level: Math.min(3, levelIndex(profile.rating) + 1), style: "gentle" })
+    : null;
+  suggestedMove = coachMove ? { from: coachMove.from, to: coachMove.to } : null;
   renderBoard();
   renderHistory();
   $("botTurn").textContent = "READY";
   $("coachMessage").textContent = game.isCheck()
     ? "Your king is in check. Find a safe response: move it, block the attack, or capture the checking piece."
-    : "Your turn. Take a moment to scan checks, captures and threats — then choose your plan.";
+    : coachMove
+      ? "Coach idea: consider " + coachMove.from.toUpperCase() + " → " + coachMove.to.toUpperCase() + ". The board marks the starting and suggested squares. Check your opponent's threat before choosing."
+      : "Your turn. Take a moment to scan checks, captures and threats — then choose your plan.";
   updateTurnUI();
   $("undoBtn").disabled = false;
   checkGameEnd();
@@ -351,6 +506,7 @@ $("setupForm").addEventListener("submit", (event) => {
     name, mode, rating: mode === "beginner" ? 500 : mode === "casual" ? 760 : 1080,
     wins: 0, losses: 0, draws: 0, played: 0, streak: 0, tutorialSeen: false
   };
+  localStorage.setItem(lastPlayerKey(), name);
   showScreen("gameScreen");
   updateProfileUI();
   startMatch();
@@ -396,10 +552,11 @@ $("hintBtn").addEventListener("click", () => {
   if (!game || matchFinished || thinking || game.turn() !== "w") { toast("Hints are available on your turn."); return; }
   const move = chooseMove(game, { level: Math.min(3, levelIndex(profile.rating) + 1), style: "gentle" });
   if (!move) return;
+  suggestedMove = { from: move.from, to: move.to };
   selectedSquare = move.from;
   legalTargets = game.moves({ square: move.from, verbose: true });
   renderBoard();
-  $("coachMessage").textContent = "Hint: Consider moving your " + move.piece + " from " + move.from + " to " + move.to + ". Check if it will be safe there.";
+  $("coachMessage").textContent = "Coach move: " + move.from.toUpperCase() + " → " + move.to.toUpperCase() + ". The board highlights both squares. This is a suggestion, not a forced move.";
 });
 $("tipBtn").addEventListener("click", () => {
   if (matchFinished) return;
@@ -475,3 +632,12 @@ if (window.kheloDesktop?.appVersion) {
     $("appStatus").textContent = "DESKTOP APP · VERSION " + version;
   }).catch(() => {});
 }
+
+$("signOutBtn").addEventListener("click", async () => {
+  if (!supabase) { showSignedOutScreen(); return; }
+  const { error } = await supabase.auth.signOut();
+  if (error) toast("Sign out failed: " + error.message);
+  else showSignedOutScreen();
+});
+
+initializeEmailLogin();
