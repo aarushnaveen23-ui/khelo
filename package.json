@@ -1,0 +1,52 @@
+{
+  "name": "khelo-chess-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "KHELO — a personal chess training desktop app",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev:web": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "start": "npm run build && electron .",
+    "dist:win": "npm run build && electron-builder --win nsis --x64",
+    "dist:dir": "npm run build && electron-builder --dir"
+  },
+  "dependencies": {
+    "chess.js": "1.4.0"
+  },
+  "devDependencies": {
+    "electron": "45.5.0",
+    "electron-builder": "26.18.1",
+    "vite": "8.3.8"
+  },
+  "build": {
+    "appId": "com.khelo.chess",
+    "productName": "KHELO",
+    "asar": true,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "KHELO-Setup-\${version}-\${arch}.\${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "KHELO"
+    }
+  }
+}

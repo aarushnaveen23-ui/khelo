@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#173f3b">
+  <title>KHELO — Chess Training Club</title>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="KHELO home">
+      <span class="brand-mark">♞</span>
+      <span><b>KHELO<span>.</span></b><small>CHESS TRAINING CLUB</small></span>
+    </a>
+    <div class="top-status"><i></i><span id="appStatus">YOUR PERSONAL CHESS SPACE</span></div>
+    <div class="top-actions">
+      <button class="subtle-button" id="fullscreenBtn" type="button">⛶ <span>Fullscreen</span></button>
+      <button class="user-chip" id="userChip" type="button" hidden><b id="userAvatar">K</b><span id="userNameChip">Player</span></button>
+    </div>
+  </header>
+
+  <main>
+    <section class="screen active" id="setupScreen">
+      <div class="welcome-grid">
+        <section class="welcome-copy">
+          <p class="eyebrow">YOUR NEXT MOVE STARTS HERE</p>
+          <h1>Learn the game.<br><em>Own the board.</em></h1>
+          <p class="lead">A personal chess trainer that meets you at your level, gives you room to practise, and helps you become a more thoughtful player after every match.</p>
+          <div class="benefits">
+            <div><i>♟</i><span><b>Learn step by step</b><small>Friendly lessons and guided first moves.</small></span></div>
+            <div><i>↗</i><span><b>Grow at your own pace</b><small>Your practice opponent adapts as you improve.</small></span></div>
+            <div><i>✦</i><span><b>Improve after every match</b><small>Short reviews with one useful tip.</small></span></div>
+          </div>
+          <p class="footnote">LEARN · PLAY · REVIEW · LEVEL UP</p>
+        </section>
+
+        <form class="setup-card" id="setupForm">
+          <div class="setup-card-head">
+            <div><small>LET'S GET YOU STARTED</small><h2>Set up your player</h2><p>Your progress is saved on this computer.</p></div>
+            <span class="step-stamp">01<small>START</small></span>
+          </div>
+          <label class="field-label" for="playerName">What should we call you?</label>
+          <input id="playerName" class="name-input" maxlength="20" autocomplete="nickname" placeholder="Enter your player name" required>
+          <fieldset class="experience-list">
+            <legend class="field-label">How much chess have you played?</legend>
+            <label class="experience-option selected"><input type="radio" name="experience" value="beginner" checked><i>🌱</i><span><b>I'm new to chess</b><small>Teach me from the beginning.</small></span></label>
+            <label class="experience-option"><input type="radio" name="experience" value="casual"><i>♞</i><span><b>I've played a little</b><small>I know how the pieces move.</small></span></label>
+            <label class="experience-option"><input type="radio" name="experience" value="competitive"><i>🏆</i><span><b>I'm experienced</b><small>Give me a stronger challenge.</small></span></label>
+          </fieldset>
+          <button class="primary-button wide" type="submit">Create my chess journey <span>→</span></button>
+          <p class="privacy-note">🔒 No online account or password. Your player profile stays on this device.</p>
+        </form>
+      </div>
+    </section>
+
+    <section class="screen" id="gameScreen">
+      <div class="game-heading">
+        <div><p class="eyebrow">YOUR TRAINING SPACE</p><h1>Welcome back, <em id="welcomeName">Player</em>.</h1><p>Take your time. Think through each move. Keep improving.</p></div>
+        <div class="heading-buttons"><button class="subtle-button" id="switchPlayerBtn">Switch player</button><button class="subtle-button" id="settingsBtn">⚙ Settings</button></div>
+      </div>
+
+      <div class="dashboard">
+        <aside class="progress-sidebar">
+          <div class="sidebar-profile"><i id="profileAvatar">P</i><span><b id="profileName">Player</b><small>YOUR CHESS JOURNEY</small></span></div>
+          <div class="side-divider"></div>
+          <section><small class="side-label">CURRENT LEVEL</small><div class="level-line"><b id="levelNumber">01</b><span><strong id="levelName">Rookie</strong><small id="levelDescription">Learning the basics</small></span></div><div class="level-track"><i id="levelFill"></i></div><div class="level-meta"><small id="levelProgress">0% to next level</small><b id="rating">500 pts</b></div></section>
+          <div class="side-divider"></div>
+          <section><small class="side-label">MATCH RECORD</small><div class="record-grid"><div><b id="wins">0</b><small>WINS</small></div><div><b id="draws">0</b><small>DRAWS</small></div><div><b id="losses">0</b><small>LOSSES</small></div></div><div class="streak"><span>✦</span><b id="streak">0-match streak</b></div></section>
+          <p class="sidebar-quote">Strong players are made one <b>good decision</b> at a time.</p>
+        </aside>
+
+        <section class="arena">
+          <div class="arena-head"><div><small>THE PRACTICE BOARD</small><h2>Ready for your next move?</h2></div><span class="level-tag" id="levelTag">LEVEL 01 · ROOKIE</span></div>
+          <div class="arena-grid">
+            <section class="board-column">
+              <div class="player-bar"><span class="player-id"><i class="bot-avatar">✦</i><span><b>KHELO COACH</b><small id="botDescription">Friendly practice opponent</small></span></span><small id="botTurn" class="turn">READY</small></div>
+              <div class="board-frame"><div class="rank-coordinates" id="rankCoords"></div><div class="chessboard" id="board" aria-label="Interactive chess board"></div><div class="file-coordinates" id="fileCoords"></div></div>
+              <div class="player-bar"><span class="player-id"><i class="my-avatar" id="myAvatar">P</i><span><b id="myLabel">YOU · WHITE</b><small id="myStatus">Your turn starts the game</small></span></span><small id="myTurn" class="turn your-turn">YOUR TURN</small></div>
+              <div class="board-tools"><button class="tool-button" id="hintBtn">✧ Hint</button><button class="tool-button" id="undoBtn" disabled>↶ Take back</button><button class="tool-button" id="flipBtn">⇅ Flip board</button><button class="tool-button" id="newMatchBtn">＋ New match</button><button class="tool-button resign" id="resignBtn">Resign</button></div>
+            </section>
+
+            <aside class="coach-column">
+              <section class="coach-card"><div class="coach-head"><i>K</i><span><b>Your KHELO coach</b><small>HERE TO HELP YOU IMPROVE</small></span><em>● LIVE</em></div><p id="coachMessage" aria-live="polite">Welcome! Start by moving a centre pawn. The centre gives your pieces room to become active.</p><button id="tipBtn" class="tip-button">Give me a small tip →</button></section>
+              <section class="moves-card"><div class="moves-head"><span><small>MATCH DETAILS</small><b>Move history</b></span><small id="moveCount">0 MOVES</small></div><div class="move-list" id="moveList"><p class="empty-moves">Your moves will appear here.<br><small>White moves first.</small></p></div><p class="match-status" id="matchStatus">Waiting for your first move</p></section>
+              <section class="mission-card"><i>◎</i><span><small>YOUR MINI MISSION</small><b id="missionTitle">Own the centre</b><p id="missionText">Move a centre pawn, then bring out a knight.</p></span></section>
+              <section class="review-card" id="reviewCard" hidden><small>MATCH REVIEW</small><h3 id="reviewTitle"></h3><p id="reviewText"></p><b class="rating" id="reviewRating"></b><button class="primary-button wide" id="nextMatchBtn">Play another match →</button></section>
+            </aside>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="lessonDialog" class="lesson-dialog">
+    <div class="lesson-top"><b>♞ KHELO STARTER SCHOOL</b><button id="closeLessonBtn" class="close-btn">×</button></div>
+    <div class="lesson-progress"><i id="lessonProgress"></i></div>
+    <div class="lesson-body"><div id="lessonPiece" class="lesson-art">♔</div><div class="lesson-copy"><small id="lessonStep">YOUR FIRST LESSON · 01</small><h2 id="lessonTitle"></h2><p id="lessonText"></p><div id="lessonFact" class="lesson-fact"></div><div class="lesson-actions"><button class="text-link" id="skipLessonBtn">Learn while playing</button><button class="primary-button" id="nextLessonBtn">Next lesson →</button></div></div></div>
+    <div class="lesson-foot"><span>LEARN AT YOUR OWN PACE</span><span id="lessonCount">01 / 06</span></div>
+  </dialog>
+
+  <dialog id="settingsDialog" class="settings-dialog">
+    <div class="dialog-head"><div><small>MAKE KHELO YOUR OWN</small><h2>Chess Engine Settings</h2><p>Choose the opponent that plays against you.</p></div><button id="closeSettingsBtn" class="close-btn">×</button></div>
+    <section class="settings-section"><h3>Choose a chess engine</h3>
+      <label class="engine-option"><input type="radio" name="engineMode" value="builtin" checked><span><b>KHELO built-in AI</b><small>Local practice AI with adjustable strength. Ready immediately.</small></span><em>BUILT IN</em></label>
+      <label class="engine-option"><input type="radio" name="engineMode" value="external"><span><b>My own UCI chess engine</b><small>Choose a compatible engine executable from your computer.</small></span><em>CUSTOM</em></label>
+      <div class="engine-path"><input id="enginePath" readonly placeholder="No external engine selected"><button id="chooseEngineBtn" class="subtle-button">Browse…</button></div>
+      <p class="settings-note">A chess engine calculates chess moves. Chat AIs are different: they can explain ideas, but are not automatically UCI chess engines.</p>
+    </section>
+    <section class="settings-section"><label class="setting-row"><span><b>Adaptive difficulty</b><small>Adjust KHELO's training strength after each match.</small></span><input id="adaptiveToggle" type="checkbox" checked></label><label class="setting-row"><span><b>Allow hints</b><small>Let the coach suggest a candidate move.</small></span><input id="hintsToggle" type="checkbox" checked></label></section>
+    <div class="dialog-actions"><button id="resetSettingsBtn" class="subtle-button">Reset</button><button id="saveSettingsBtn" class="primary-button">Save settings ✓</button></div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
