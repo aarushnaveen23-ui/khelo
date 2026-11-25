@@ -43,6 +43,13 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
+findstr /C:"YOUR_PROJECT_REF" ".env" >nul
+if not errorlevel 1 (
+  echo ERROR: Replace the example Supabase project URL in .env.
+  start "" notepad.exe ".env"
+  pause
+  exit /b 1
+)
 findstr /C:"YOUR_SUPABASE" ".env" >nul
 if not errorlevel 1 (
   echo ERROR: Replace the example key with your real public anon/publishable key.
