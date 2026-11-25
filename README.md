@@ -83,6 +83,7 @@ See SUPABASE_SETUP.md. Never use a service_role key in the desktop app.
 ## Windows .bat helpers
 
 - INSTALL_KHELO.bat — first-time setup helper.
+- INSTALL_NODEJS.bat — checks for Node.js 24+ and offers a guided Windows Package Manager install.
 - INSTALL_DEPENDENCIES.bat — checks Node.js 24+ and runs npm install.
 - SETUP_EMAIL_LOGIN.bat — creates/opens .env for Supabase values.
 - RUN_KHELO.bat — launches the Electron desktop app.
