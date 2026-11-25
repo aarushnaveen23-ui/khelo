@@ -72,7 +72,7 @@ if errorlevel 1 (
 )
 
 echo.
-echo Step 2 of 2: Installing KHELO packages and the Electron runtime...
+echo Step 2 of 2: Installing KHELO app packages...
 echo This first install can take several minutes. Keep this window open.
 echo Detailed install messages will appear below.
 echo.
