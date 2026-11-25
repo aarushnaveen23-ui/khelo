@@ -38,7 +38,7 @@
           "arch": ["x64"]
         }
       ],
-      "artifactName": "KHELO-Setup-\${version}-\${arch}.\${ext}"
+      "artifactName": "KHELO-Setup-${version}-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,
