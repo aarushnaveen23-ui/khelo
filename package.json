@@ -9,10 +9,14 @@
     "build": "vite build",
     "start": "npm run build && electron .",
     "dist:win": "npm run build && electron-builder --win nsis --x64",
-    "dist:dir": "npm run build && electron-builder --dir"
+    "dist:dir": "npm run build && electron-builder --dir",
+    "test": "node --test",
+    "check:syntax": "node --check electron/main.cjs && node --check electron/preload.cjs",
+    "verify": "npm run check:syntax && npm test && npm run build"
   },
   "dependencies": {
-    "chess.js": "1.4.0"
+    "chess.js": "1.4.0",
+    "@supabase/supabase-js": "2.119.2"
   },
   "devDependencies": {
     "electron": "45.5.0",
@@ -35,7 +39,9 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "artifactName": "KHELO-Setup-${version}-${arch}.${ext}"
@@ -48,5 +54,6 @@
       "createStartMenuShortcut": true,
       "shortcutName": "KHELO"
     }
-  }
+  },
+  "type": "module"
 }
