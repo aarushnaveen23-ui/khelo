@@ -67,3 +67,30 @@ A chess engine is not the same thing as a conversational AI. UCI engines calcula
 - Profiles and settings use local storage on this computer.
 - No online account, password, cloud profile or multiplayer server is included in this version.
 - The Windows installer is produced by GitHub Actions; it is not committed into the source repository.
+
+
+## Email OTP sign-in
+
+The app starts with a real email verification screen powered by Supabase Auth. Enter your email, receive a one-time code in that inbox, and type the code into KHELO. The app does not show or invent OTP codes.
+
+Before building, create a Supabase project and configure its Email template to include {{ .Token }} so it sends a numeric OTP, not only a magic link. Then copy .env.example to .env and fill in:
+
+    VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+    VITE_SUPABASE_ANON_KEY=YOUR_PUBLIC_ANON_OR_PUBLISHABLE_KEY
+
+See SUPABASE_SETUP.md. Never use a service_role key in the desktop app.
+
+## Windows .bat helpers
+
+- INSTALL_KHELO.bat — first-time setup helper.
+- INSTALL_DEPENDENCIES.bat — checks Node.js 24+ and runs npm install.
+- SETUP_EMAIL_LOGIN.bat — creates/opens .env for Supabase values.
+- RUN_KHELO.bat — launches the Electron desktop app.
+- BUILD_KHELO_EXE.bat — runs checks and creates the Windows NSIS .exe installer in release.
+- CLEAN_KHELO_BUILD.bat — removes only generated dist and release folders.
+
+Recommended order: INSTALL_KHELO.bat, finish SUPABASE_SETUP.md, then RUN_KHELO.bat or BUILD_KHELO_EXE.bat.
+
+## Build through GitHub Actions
+
+Set repository Actions variables VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, then open Actions → Build KHELO for Windows → Run workflow. Download the KHELO-Windows-Installer artifact when the job succeeds.
