@@ -36,6 +36,9 @@ jobs:
 
       - name: Run KHELO checks
         run: npm run verify
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
 
       - name: Build Windows installer
         run: npm run dist:win
