@@ -11,7 +11,7 @@
     "dist:win": "npm run build && electron-builder --win nsis --x64",
     "dist:dir": "npm run build && electron-builder --dir",
     "test": "node --test",
-    "check:syntax": "node --check electron/main.cjs && node --check electron/preload.cjs",
+    "check:syntax": "node --check electron/main.cjs && node --check electron/preload.cjs && node --check vite.config.js && node --check src/main.js && node --check src/chess-ai.js && node --check src/supabase-client.js",
     "verify": "npm run check:syntax && npm test && npm run build"
   },
   "dependencies": {
