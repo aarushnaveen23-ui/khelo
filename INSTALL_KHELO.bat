@@ -6,6 +6,12 @@ echo.
 echo  KHELO - FIRST TIME SETUP
 echo  ========================
 echo.
+where node >nul 2>nul
+if errorlevel 1 (
+  call "INSTALL_NODEJS.bat"
+  echo Reopen this window after Node.js installs, then run INSTALL_KHELO.bat again.
+  exit /b 1
+)
 call "INSTALL_DEPENDENCIES.bat"
 if errorlevel 1 exit /b 1
 echo.
