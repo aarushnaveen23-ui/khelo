@@ -72,19 +72,21 @@ function showSignedOutScreen() {
   signedInUser = null;
   profile = null;
   $("userChip").hidden = true;
-  $("otpVerifyForm").hidden = true;
-  $("emailLoginForm").hidden = false;
+  $("authPassword").value = "";
   $("authTitle").textContent = "Sign in to continue";
-  $("authSubtitle").textContent = "Enter your email and we'll send you a one-time verification code.";
-  $("otpCode").value = "";
+  $("authSubtitle").textContent = "Enter your KHELO email address and password.";
+  $("signInBtn").disabled = false;
+  $("createAccountBtn").disabled = false;
+  setAuthMessage("Use your KHELO account password, not your Gmail password.");
   showScreen("authScreen");
 }
+
 async function initializeEmailLogin() {
   if (!hasSupabaseConfig || !supabase) {
     $("authConfigNote").hidden = false;
     $("emailLoginForm").addEventListener("submit", (event) => {
       event.preventDefault();
-      setAuthMessage("Email login is not configured yet. Follow SUPABASE_SETUP.md, add your Supabase URL and public anon/publishable key to .env, then rebuild KHELO.", "error");
+      setAuthMessage("Email login is not configured. Add your Supabase Project URL and public anon/publishable key to .env, save it, and rebuild KHELO.", "error");
     });
     return;
   }
@@ -105,81 +107,46 @@ async function initializeEmailLogin() {
   $("emailLoginForm").addEventListener("submit", async (event) => {
     event.preventDefault();
     const email = $("authEmail").value.trim().toLowerCase();
-    if (!email) return;
-    $("sendOtpBtn").disabled = true;
-    setAuthMessage("Sending a verification code to " + email + "…");
+    const password = $("authPassword").value;
+    const action = event.submitter?.value === "signup" ? "signup" : "signin";
+    if (!email || !password) return;
+
+    $("signInBtn").disabled = true;
+    $("createAccountBtn").disabled = true;
+    setAuthMessage(action === "signup" ? "Creating your KHELO account…" : "Signing in to KHELO…");
+
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { shouldCreateUser: true }
-      });
-      if (error) throw error;
-      $("emailLoginForm").hidden = true;
-      $("otpVerifyForm").hidden = false;
-      $("authTitle").textContent = "Check your inbox";
-      $("authSubtitle").textContent = "Enter the six-digit one-time code sent to " + email + ".";
-      $("otpCode").focus();
-      setAuthMessage("Code requested. Check your inbox and spam folder. For security, the code is never shown inside KHELO.", "success");
-      $("resendOtpBtn").disabled = true;
-      setTimeout(() => { $("resendOtpBtn").disabled = false; }, 60000);
+      if (action === "signup") {
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error) throw error;
+
+        if (!data.session || !data.user) {
+          setAuthMessage("Supabase is still requiring email confirmation. Open Authentication → Sign In / Providers → Email in your Supabase dashboard and turn OFF Confirm email. Then create your account again. KHELO does not use OTP.", "error");
+          return;
+        }
+
+        setAuthMessage("Your KHELO account is ready. Opening your chess space…", "success");
+        openPlayerSpace(data.user);
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        if (!data.user) throw new Error("Supabase did not return a signed-in user.");
+        setAuthMessage("Signed in successfully. Opening your chess space…", "success");
+        openPlayerSpace(data.user);
+      }
     } catch (error) {
-      setAuthMessage("Could not send the code: " + error.message, "error");
+      const detail = String(error?.message || error);
+      if (action === "signup" && /already registered|user already exists/i.test(detail)) {
+        setAuthMessage("This email already has an account from the earlier OTP test, and that account may not have a password. In Supabase Authentication → Users, remove only your old KHELO test account, then use Create account again. You can also use another email address.", "error");
+      } else if (action === "signin" && /invalid login credentials/i.test(detail)) {
+        setAuthMessage("Email or password is incorrect. If this account was created using the old OTP-only version, it has no password yet. Remove only that old test user in Supabase Authentication → Users, then create a new KHELO account.", "error");
+      } else {
+        setAuthMessage((action === "signup" ? "Could not create account: " : "Could not sign in: ") + detail, "error");
+      }
     } finally {
-      $("sendOtpBtn").disabled = false;
+      $("signInBtn").disabled = false;
+      $("createAccountBtn").disabled = false;
     }
-  });
-
-  $("otpVerifyForm").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const email = $("authEmail").value.trim().toLowerCase();
-    const token = $("otpCode").value.trim();
-    if (!/^\d{6}$/.test(token)) {
-      setAuthMessage("Enter the six digits from your email.", "error");
-      return;
-    }
-    $("verifyOtpBtn").disabled = true;
-    setAuthMessage("Verifying your email code…");
-    try {
-      const { data, error } = await supabase.auth.verifyOtp({
-        email,
-        token,
-        type: "email"
-      });
-      if (error) throw error;
-      if (!data.user) throw new Error("The provider did not return a signed-in user.");
-      setAuthMessage("Email verified. Opening your chess space…", "success");
-      openPlayerSpace(data.user);
-    } catch (error) {
-      setAuthMessage("Code verification failed: " + error.message + ". Check the code and try again.", "error");
-    } finally {
-      $("verifyOtpBtn").disabled = false;
-    }
-  });
-
-  $("changeEmailBtn").addEventListener("click", () => {
-    $("otpVerifyForm").hidden = true;
-    $("emailLoginForm").hidden = false;
-    $("otpCode").value = "";
-    $("authTitle").textContent = "Sign in to continue";
-    $("authSubtitle").textContent = "Check the email address, then request a new one-time code.";
-    setAuthMessage("Enter the email address you want to verify.");
-  });
-
-  $("resendOtpBtn").addEventListener("click", async () => {
-    const email = $("authEmail").value.trim().toLowerCase();
-    $("resendOtpBtn").disabled = true;
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { shouldCreateUser: true }
-      });
-      if (error) throw error;
-      setAuthMessage("A new code has been requested. Check your inbox.", "success");
-    } catch (error) {
-      setAuthMessage("Could not resend the code: " + error.message, "error");
-      $("resendOtpBtn").disabled = false;
-    }
-    setTimeout(() => { $("resendOtpBtn").disabled = false; }, 60000);
   });
 }
 
