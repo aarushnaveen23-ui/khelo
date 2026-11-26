@@ -25,33 +25,32 @@
       <div class="auth-layout">
         <section class="auth-intro">
           <p class="eyebrow">YOUR CHESS JOURNEY, YOUR ACCOUNT</p>
-          <h1>One email.<br><em>One secure code.</em></h1>
-          <p class="lead">Sign in with your email address. KHELO will send a one-time code to your inbox before opening your training space.</p>
+          <h1>One email.<br><em>Your own KHELO.</em></h1>
+          <p class="lead">Create your KHELO account with an email address and password. Sign in whenever you want and get straight to your chess training.</p>
           <div class="auth-points">
-            <div><i>✉</i><span><b>Email verification</b><small>Enter the six-digit code sent to your email.</small></span></div>
-            <div><i>♟</i><span><b>Your own player profile</b><small>Keep your chess progress separate on this computer.</small></span></div>
-            <div><i>🔒</i><span><b>No password to remember</b><small>Only the real code in your inbox can complete sign-in.</small></span></div>
+            <div><i>✉</i><span><b>Email + password</b><small>Use your KHELO account details.</small></span></div>
+            <div><i>♟</i><span><b>Your own player profile</b><small>Keep your chess progress separate.</small></span></div>
+            <div><i>🔒</i><span><b>No OTP codes</b><small>KHELO does not ask for a six-digit email code.</small></span></div>
           </div>
         </section>
         <section class="auth-card">
           <div class="auth-card-mark">♞</div>
           <p class="auth-overline">WELCOME TO KHELO</p>
           <h2 id="authTitle">Sign in to continue</h2>
-          <p class="auth-subtitle" id="authSubtitle">Enter your email and we'll send you a one-time verification code.</p>
+          <p class="auth-subtitle" id="authSubtitle">Enter your KHELO email address and password.</p>
           <form id="emailLoginForm">
             <label class="field-label" for="authEmail">Email address</label>
-            <input id="authEmail" class="name-input" type="email" maxlength="254" autocomplete="email" placeholder="you@example.com" required>
-            <button class="primary-button wide" id="sendOtpBtn" type="submit">Send my login code <span>→</span></button>
+            <input id="authEmail" class="name-input" type="email" maxlength="254" autocomplete="username" placeholder="you@example.com" required>
+            <label class="field-label auth-password-label" for="authPassword">KHELO password</label>
+            <input id="authPassword" class="name-input" type="password" minlength="8" maxlength="128" autocomplete="current-password" placeholder="At least 8 characters" required>
+            <div class="auth-actions">
+              <button class="primary-button wide" id="signInBtn" name="authAction" value="signin" type="submit">Sign in <span>→</span></button>
+              <button class="subtle-button wide" id="createAccountBtn" name="authAction" value="signup" type="submit">Create account</button>
+            </div>
           </form>
-          <form id="otpVerifyForm" hidden>
-            <label class="field-label" for="otpCode">6-digit email code</label>
-            <input id="otpCode" class="name-input otp-input" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="000000" required>
-            <button class="primary-button wide" id="verifyOtpBtn" type="submit">Verify and sign in <span>✓</span></button>
-            <div class="otp-actions"><button class="text-link" id="changeEmailBtn" type="button">Change email</button><button class="text-link" id="resendOtpBtn" type="button">Send a new code</button></div>
-          </form>
-          <p class="auth-message" id="authMessage" role="status" aria-live="polite">Your email is used for account verification. Never share your one-time code with anyone.</p>
-          <p class="auth-config-note" id="authConfigNote">Email login needs the project owner to configure Supabase once. See SUPABASE_SETUP.md in the repository.</p>
-          <p class="privacy-note">The code is sent by your email authentication provider. KHELO never displays or invents an OTP.</p>
+          <p class="auth-message" id="authMessage" role="status" aria-live="polite">Use your KHELO account password, not your Gmail password.</p>
+          <p class="auth-config-note" id="authConfigNote">Email and password login needs the project owner to configure Supabase once. See SUPABASE_SETUP.md in the repository.</p>
+          <p class="privacy-note">Your password is handled by Supabase Auth. Never share your password with anyone.</p>
         </section>
       </div>
     </section>
