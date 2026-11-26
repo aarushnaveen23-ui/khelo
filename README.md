@@ -1,27 +1,28 @@
 # KHELO — Chess Training Desktop
 
-KHELO is a Windows desktop chess-learning app. It is designed for new players first, then gradually increases the challenge as the player improves.
+KHELO is a Windows desktop chess-learning app for new players. It teaches the basics, provides a built-in chess opponent, adjusts training difficulty, and gives short tips after matches.
 
-## What is included
+## Features
 
-- Local player profiles, progress, wins, draws and losses.
+- Email + password account using Supabase Auth (no OTP screen).
+- Local player profiles and progress, wins, draws, losses and rating.
 - Beginner, casual and experienced starting profiles.
 - Six short starter lessons for first-time chess players.
 - Legal chess rules through chess.js: legal moves, castling, en passant, promotion, check, checkmate and draw handling.
 - Built-in minimax chess opponent with six training levels.
 - Adaptive training rating: the opponent becomes tougher after wins and gentler after losses.
 - Hint button, take-back, board flip, move history and short match-review tips.
-- Optional external UCI engine selection from the desktop app.
+- Optional external UCI chess engine selection from the desktop app.
 - Electron desktop shell with context isolation and a restricted preload bridge.
 - GitHub Actions workflow to build a Windows installer.
 
 ## Requirements
 
 - Windows 10 or Windows 11 for the packaged installer.
-- Node.js 24 for development and packaging.
+- Node.js 24 or newer for development and packaging.
 - Internet access for the first npm install to download dependencies.
 
-## Run the desktop app locally
+## Run locally
 
 Open PowerShell in the project folder and run:
 
@@ -31,12 +32,6 @@ Open PowerShell in the project folder and run:
 
 The app opens in its own Electron desktop window. It does not open as a public website.
 
-For a browser preview during UI development, run:
-
-    npm run dev:web
-
-Then open the local address printed by Vite.
-
 ## Build a Windows installer
 
 Run:
@@ -44,81 +39,42 @@ Run:
     npm install
     npm run dist:win
 
-The Windows installer is written to the release folder. It creates Start Menu and Desktop shortcuts.
+The Windows installer is written to the `release` folder. It creates Start Menu and Desktop shortcuts.
 
 ## Build through GitHub Actions
 
 1. Open the repository's Actions tab.
-2. Select Build KHELO for Windows.
-3. Choose Run workflow.
-4. When the workflow finishes, open the run and download the KHELO-Windows-Installer artifact.
+2. Select **Build KHELO for Windows**.
+3. Choose **Run workflow**.
+4. When the workflow finishes, open the run and download the `KHELO-Windows-Installer` artifact.
 
-The workflow also runs when a version tag such as v1.0.0 is pushed.
+The workflow also runs when a version tag such as `v1.0.0` is pushed.
 
-## Choosing your own chess engine
+## Choose your own chess engine
 
 Open Settings → Chess Engine → My own UCI chess engine → Browse in the installed desktop app and select a UCI-compatible engine executable. KHELO starts the selected process and requests a move using the UCI protocol. If no external engine is selected, the built-in practice AI is used.
 
 A chess engine is not the same thing as a conversational AI. UCI engines calculate chess moves. A chat model can be integrated separately for natural-language explanations, but an API key does not automatically turn a chat model into a legal-move chess engine.
 
-## Important notes
+## Email + password login setup
 
-- The built-in opponent is a lightweight training AI. It is intended for learning and practice, not as a tournament-strength engine.
-- Profiles and settings use local storage on this computer.
-- No online account, password, cloud profile or multiplayer server is included in this version.
-- The Windows installer is produced by GitHub Actions; it is not committed into the source repository.
+See [SUPABASE_SETUP.md](SUPABASE_SETUP.md) for the Supabase Project URL, public key, email provider, and account setup instructions.
 
+For the requested no-OTP flow, Supabase's **Confirm email** provider setting must be turned off. This means a new account's email address is not verified before sign-in. Keep this setting for private testing only; a public release should use an email-verification flow.
 
-## Email OTP sign-in
-
-The app starts with a real email verification screen powered by Supabase Auth. Enter your email, receive a one-time code in that inbox, and type the code into KHELO. The app does not show or invent OTP codes.
-
-Before building, create a Supabase project and configure its Email template to include {{ .Token }} so it sends a numeric OTP, not only a magic link. Then copy .env.example to .env and fill in:
+The desktop app reads these values from `.env` at build time:
 
     VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
     VITE_SUPABASE_ANON_KEY=YOUR_PUBLIC_ANON_OR_PUBLISHABLE_KEY
 
-See SUPABASE_SETUP.md. Never use a service_role key in the desktop app.
+Never put a service-role key, secret key, or database password in the desktop app.
 
-## Windows .bat helpers
+## Windows helper files
 
-- INSTALL_KHELO.bat — first-time setup helper.
-- INSTALL_NODEJS.bat — checks for Node.js 24+ and offers a guided Windows Package Manager install.
-- INSTALL_DEPENDENCIES.bat — checks Node.js 24+ and runs npm install.
-- SETUP_EMAIL_LOGIN.bat — creates/opens .env for Supabase values.
-- RUN_KHELO.bat — launches the Electron desktop app.
-- BUILD_KHELO_EXE.bat — runs checks and creates the Windows NSIS .exe installer in release.
-- CLEAN_KHELO_BUILD.bat — removes only generated dist and release folders.
-
-Recommended order: INSTALL_KHELO.bat, finish SUPABASE_SETUP.md, then RUN_KHELO.bat or BUILD_KHELO_EXE.bat.
-
-## Build through GitHub Actions
-
-Set repository Actions variables VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, then open Actions → Build KHELO for Windows → Run workflow. Download the KHELO-Windows-Installer artifact when the job succeeds.
-
-
-## Email OTP sign-in
-
-The app starts with a real email verification screen powered by Supabase Auth. Enter your email, receive a one-time code in that inbox, and type the code into KHELO. The app does not show or invent OTP codes.
-
-Before building, create a Supabase project and configure its Email template to include {{ .Token }} so it sends a numeric OTP, not only a magic link. Then copy .env.example to .env and fill in:
-
-    VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
-    VITE_SUPABASE_ANON_KEY=YOUR_PUBLIC_ANON_OR_PUBLISHABLE_KEY
-
-See SUPABASE_SETUP.md. Never use a service_role key in the desktop app.
-
-## Windows .bat helpers
-
-- INSTALL_KHELO.bat — first-time setup helper.
-- INSTALL_DEPENDENCIES.bat — checks Node.js 24+ and runs npm install.
-- SETUP_EMAIL_LOGIN.bat — creates/opens .env for Supabase values.
-- RUN_KHELO.bat — launches the Electron desktop app.
-- BUILD_KHELO_EXE.bat — runs checks and creates the Windows NSIS .exe installer in release.
-- CLEAN_KHELO_BUILD.bat — removes only generated dist and release folders.
-
-Recommended order: INSTALL_KHELO.bat, finish SUPABASE_SETUP.md, then RUN_KHELO.bat or BUILD_KHELO_EXE.bat.
-
-## Build through GitHub Actions
-
-Set repository Actions variables VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, then open Actions → Build KHELO for Windows → Run workflow. Download the KHELO-Windows-Installer artifact when the job succeeds.
+- `INSTALL_NODEJS.bat` — checks for Node.js 24+ and offers a guided installation.
+- `INSTALL_KHELO.bat` — first-time setup helper.
+- `INSTALL_DEPENDENCIES.bat` — checks Node.js 24+ and installs npm dependencies.
+- `SETUP_EMAIL_LOGIN.bat` — opens the `.env` configuration file.
+- `RUN_KHELO.bat` — launches the desktop app.
+- `BUILD_KHELO_EXE.bat` — runs checks and creates the Windows NSIS `.exe` installer in `release`.
+- `CLEAN_KHELO_BUILD.bat` — removes only generated `dist` and `release` folders.
