@@ -1,42 +1,30 @@
-# KHELO Email OTP Setup
+# KHELO Email + Password Setup
 
-KHELO uses Supabase Auth email OTP. The app asks for a six-digit code and verifies it inside the desktop window; users should not need to click a confirmation link that redirects to a localhost website.
+KHELO signs users in with an email address and a KHELO account password. The app does not ask for an email OTP or send a passwordless sign-in link.
 
-## 1. Create a Supabase project
+## 1. Supabase project values
 
-1. Open https://supabase.com/dashboard and create a project.
+1. Open https://supabase.com/dashboard and select your KHELO project.
 2. In Project Settings → API, copy the Project URL.
-3. Copy the public anon key (or publishable key).
-4. Do not use the service_role key. Never put a service_role or secret key in a desktop app.
+3. Copy the public anon key or publishable key.
+4. Never use a `service_role` or secret key in the desktop app.
 
-## 2. Configure BOTH email templates to send a six-digit code
+## 2. Enable email/password sign-in without email verification
 
-This is important because Supabase has separate templates for new sign-ups and later sign-ins.
+For the no-OTP/no-confirmation flow requested for this build:
 
-1. Open Authentication → Email Templates.
-2. Open **Confirm sign up**.
-3. Replace its subject with: `Your KHELO verification code`
-4. Replace its body with:
+1. Open Authentication → Sign In / Providers → Email.
+2. Make sure the Email provider is enabled.
+3. Turn **OFF** `Confirm email`.
+4. Save the provider settings.
 
-   ```html
-   <h2>Your KHELO verification code</h2>
-   <p>Enter this six-digit code in the KHELO desktop app:</p>
-   <h1>{{ .Token }}</h1>
-   <p>If you did not request this code, you can ignore this email.</p>
-   ```
+Important: with Confirm email turned off, Supabase accepts a newly entered email without proving that the user owns that inbox. Use this for a private test project only. For a public release, email verification should be enabled and a proper desktop confirmation-link flow should be implemented instead.
 
-5. Save the template.
-6. Open **Magic Link** (sometimes labelled **Magic Link or OTP**).
-7. Set the same subject and body shown above, using `{{ .Token }}`, then save.
-8. Open Authentication → Sign In / Providers → Email and make sure the Email provider is enabled.
+## 3. Configure KHELO
 
-Do not leave a `{{ .ConfirmationURL }}` sign-in link in either of these templates when using KHELO's six-digit OTP screen. Supabase uses `{{ .Token }}` to send a numeric OTP instead of a link.
-
-## 3. Add the project settings to KHELO
-
-1. Run SETUP_EMAIL_LOGIN.bat.
+1. Run `SETUP_EMAIL_LOGIN.bat`.
 2. Notepad opens the `.env` file.
-3. Set these values using the same Supabase project:
+3. Add the URL and public key from the same Supabase project:
 
    ```env
    VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
@@ -45,21 +33,43 @@ Do not leave a `{{ .ConfirmationURL }}` sign-in link in either of these template
 
 4. Save `.env` and close Notepad.
 
-These are public client configuration values. Never paste a service_role key, secret key, or database password.
+These two values are public client configuration. Never put a service-role key, secret key, database password, or your KHELO account password in `.env`.
 
-## 4. Email delivery
+## 4. Create your KHELO account
 
-For reliable public delivery, configure a verified SMTP provider in Supabase. Check the provider's current sending limits and anti-abuse settings. Supabase also applies OTP rate limits; KHELO disables its resend button for one minute after a successful resend.
+1. Run KHELO.
+2. Enter your email address and choose a KHELO password of at least 8 characters.
+3. Click **Create account**.
+4. Once the account is created, KHELO opens the chess player setup.
+5. Next time, enter the same email and password and click **Sign in**.
 
-## 5. Build after configuration
+Your KHELO password is separate from your Gmail password. Do not share it with anyone.
 
-Run INSTALL_DEPENDENCIES.bat, then BUILD_KHELO_EXE.bat. The installer appears in the release folder.
+## 5. If you used the old OTP version before
 
-## 6. Build through GitHub Actions
+The old OTP-only flow may already have created a Supabase user that has no password. If KHELO says the user is already registered or the password is invalid:
 
-Add repository Actions variables under Settings → Secrets and variables → Actions → Variables:
+1. Open Supabase → Authentication → Users.
+2. Find only the test account you created for KHELO.
+3. Delete that old test user.
+4. Open the new KHELO build and click **Create account** with your email and a new KHELO password.
 
-- VITE_SUPABASE_URL
-- VITE_SUPABASE_ANON_KEY
+Only remove your own KHELO test account. Do not delete any other users.
 
-The workflow checks that both are present before creating the Windows installer.
+## 6. Build a fresh Windows installer
+
+After updating the source code and saving `.env`, run:
+
+- `INSTALL_DEPENDENCIES.bat` (only if dependencies are not installed yet)
+- `BUILD_KHELO_EXE.bat`
+
+The Windows installer is written to the `release` folder.
+
+## 7. GitHub Actions
+
+For a build through GitHub Actions, add these repository Actions variables under Settings → Secrets and variables → Actions → Variables:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+
+Never add a service-role or secret key as a client-side variable.
